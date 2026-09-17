@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bullets Dashboard - Realtime Cloud Tracker</title>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0b0e14;
+            --card-bg: #151a23;
+            --card-header-bg: #1c2330;
+            --accent-red: #ff3355;
+            --accent-cyan: #00f0ff;
+            --text-main: #f0f4f8;
+            --text-muted: #8a99ad;
+            --border-color: #2a3447;
+            --completed-color: #00e676;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 20px;
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 50% 0%, #1a2332 0%, #0b0e14 70%);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, rgba(255, 51, 85, 0.15), rgba(0, 240, 255, 0.05));
+            border: 1px solid var(--accent-red);
+            padding: 20px 30px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 0 20px rgba(255, 51, 85, 0.2);
+        }
+
+        .logo-title h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            letter-spacing: 2px;
+            color: #fff;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px var(--accent-red);
+        }
+
+        .logo-title span {
+            color: var(--accent-red);
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-top: 5px;
+        }
+
+        .status-badge {
+            font-size: 0.85rem;
+            padding: 5px 12px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 240, 255, 0.1);
+            color: var(--accent-cyan);
+            border: 1px solid var(--accent-cyan);
+        }
+
+        .progress-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .progress-bar-bg {
+            background: #090c10;
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent-red), var(--accent-cyan));
+            transition: width 0.4s ease;
+            box-shadow: 0 0 10px var(--accent-cyan);
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        input, select, button {
+            outline: none;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        input[type="text"] {
+            background: var(--card-bg);
+            color: #fff;
+            padding: 12px 15px;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        select {
+            background: var(--card-bg);
+            color: var(--text-main);
+            padding: 12px;
+            cursor: pointer;
+        }
+
+        .btn {
+            background: var(--accent-red);
+            color: white;
+            font-weight: 700;
+            padding: 12px 20px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 51, 85, 0.4);
+        }
+
+        .btn-sec {
+            background: transparent;
+            border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        .btn-sec:hover {
+            background: rgba(0, 240, 255, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 240, 255, 0.2);
+        }
+
+        .category-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            transition: border 0.3s;
+        }
+
+        .category-header {
+            background: var(--card-header-bg);
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .category-header:hover {
+            background: #222b3c;
+        }
+
+        .category-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .category-title i.chevron {
+            transition: transform 0.3s;
+            color: var(--accent-cyan);
+        }
+
+        .category-card.collapsed .chevron {
+            transform: rotate(-90deg);
+        }
+
+        .category-card.collapsed .task-list {
+            display: none;
+        }
+
+        .badge {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .task-list {
+            padding: 10px 20px 20px 20px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+
+        .task-item:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .task-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 2px solid var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .task-item.completed .checkbox {
+            background: var(--completed-color);
+            border-color: var(--completed-color);
+        }
+
+        .task-item.completed .checkbox::after {
+            content: '✓';
+            color: #000;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .task-text {
+            font-size: 1.1rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .task-item.completed .task-text {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .delete-btn {
+            background: transparent;
+            border: none;
+            color: #556070;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: color 0.2s;
+        }
+
+        .delete-btn:hover {
+            color: var(--accent-red);
+        }
+
+        .status-pill {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-left: 10px;
+        }
+        .status-pending { background: rgba(255, 51, 85, 0.2); color: #ff3355; border: 1px solid #ff3355; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="logo-title">
+            <h1>BULLETS <span>ROBLOX</span></h1>
+            <div class="subtitle"><i class="fa-solid fa-gamepad"></i> Realtime Team Roadmap</div>
+        </div>
+        <div class="status-badge" id="syncStatus">
+            <i class="fa-solid fa-arrows-rotate fa-spin"></i> Connecting...
+        </div>
+    </header>
+
+    <div class="progress-card">
+        <div class="progress-info">
+            <span>Overall Completion</span>
+            <span id="progress-percent">0%</span>
+        </div>
+        <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progress-fill"></div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <input type="text" id="newTaskInput" placeholder="Enter new task description...">
+        <select id="categorySelect"></select>
+        <button class="btn" onclick="addNewTask()"><i class="fa-solid fa-plus"></i> Add Task</button>
+        <button class="btn btn-sec" onclick="addNewSection()"><i class="fa-solid fa-folder-plus"></i> New Section</button>
+    </div>
+
+    <div id="boardContainer"></div>
+</div>
+
+<!-- Firebase Modular SDK -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // Your configured Firebase project credentials
+    const firebaseConfig = {
+        apiKey: "AIzaSyB1vTYDWlWxaSlJ0OCrpB3X_-Xl1VMu2C4",
+        authDomain: "bullets-dashboard.firebaseapp.com",
+        projectId: "bullets-dashboard",
+        storageBucket: "bullets-dashboard.firebasestorage.app",
+        messagingSenderId: "126968137953",
+        appId: "1:126968137953:web:36c95160345eed25d70fa0",
+        measurementId: "G-5J2990SLVG"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const docRef = doc(db, "bullets_game", "roadmap");
+
+    const initialData = [
+        {
+            id: 'req',
+            title: 'Requirements / Features',
+            collapsed: false,
+            tasks: [
+                { id: 1, text: 'TPV and FPS (Third-Person & First-Person)', completed: false }
+            ]
+        },
+        {
+            id: 'gui',
+            title: 'GUI',
+            collapsed: false,
+            tasks: [
+                { id: 2, text: 'Loadout Menu', completed: false, tag: 'Design ✓ | In-Game ✗' },
+                { id: 3, text: 'Play Button', completed: false, tag: 'Design ✓ | In-Game ✗' },
+                { id: 4, text: 'Game Mode Selection', completed: false },
+                { id: 5, text: 'HUD for Gameplay', completed: false },
+                { id: 6, text: 'Icons (Setting, etc.)', completed: false },
+                { id: 7, text: 'Shop GUI / Loading Screen', completed: false }
+            ]
+        },
+        {
+            id: 'gamemodes',
+            title: 'Gamemodes',
+            collapsed: false,
+            tasks: [
+                { id: 8, text: 'Free for All', completed: false },
+                { id: 9, text: '1v1', completed: false }
+            ]
+        },
+        {
+            id: 'backend',
+            title: 'Backend',
+            collapsed: false,
+            tasks: [
+                { id: 10, text: 'Matchmaking', completed: false },
+                { id: 11, text: 'Server', completed: false },
+                { id: 12, text: 'Shop Items (Gamepasses)', completed: false }
+            ]
+        }
+    ];
+
+    let localData = [];
+
+    // Realtime Sync Listener
+    onSnapshot(docRef, (docSnap) => {
+        const syncStatus = document.getElementById('syncStatus');
+        if (docSnap.exists()) {
+            localData = docSnap.data().categories || [];
+        } else {
+            saveToCloud(initialData);
+            localData = initialData;
+        }
+        syncStatus.innerHTML = '<i class="fa-solid fa-cloud-check"></i> Live Synced';
+        render();
+    }, (error) => {
+        console.error("Firestore error:", error);
+        document.getElementById('syncStatus').innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Sync Error';
+    });
+
+    async function saveToCloud(dataToSave) {
+        try {
+            await setDoc(docRef, { categories: dataToSave });
+        } catch (e) {
+            console.error("Error saving to database: ", e);
+        }
+    }
+
+    window.toggleSection = function(catId) {
+        const cat = localData.find(c => c.id === catId);
+        if (cat) {
+            cat.collapsed = !cat.collapsed;
+            saveToCloud(localData);
+        }
+    };
+
+    window.toggleTask = function(catId, taskId) {
+        const cat = localData.find(c => c.id === catId);
+        if (cat) {
+            const task = cat.tasks.find(t => t.id === taskId);
+            if (task) {
+                task.completed = !task.completed;
+                saveToCloud(localData);
+            }
+        }
+    };
+
+    window.deleteTask = function(catId, taskId, event) {
+        event.stopPropagation();
+        const cat = localData.find(c => c.id === catId);
+        if (cat) {
+            cat.tasks = cat.tasks.filter(t => t.id !== taskId);
+            saveToCloud(localData);
+        }
+    };
+
+    window.addNewTask = function() {
+        const input = document.getElementById('newTaskInput');
+        const select = document.getElementById('categorySelect');
+        const text = input.value.trim();
+
+        if (!text) return;
+
+        const cat = localData.find(c => c.id === select.value);
+        if (cat) {
+            cat.tasks.push({
+                id: Date.now(),
+                text: text,
+                completed: false
+            });
+            input.value = '';
+            saveToCloud(localData);
+        }
+    };
+
+    window.addNewSection = function() {
+        const title = prompt("Enter new section name:");
+        if (title && title.trim()) {
+            localData.push({
+                id: 'cat_' + Date.now(),
+                title: title.trim(),
+                collapsed: false,
+                tasks: []
+            });
+            saveToCloud(localData);
+        }
+    };
+
+    function updateProgress() {
+        let total = 0;
+        let completed = 0;
+
+        localData.forEach(cat => {
+            cat.tasks.forEach(task => {
+                total++;
+                if (task.completed) completed++;
+            });
+        });
+
+        const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
+        document.getElementById('progress-percent').innerText = `${percent}% (${completed}/${total})`;
+        document.getElementById('progress-fill').style.width = `${percent}%`;
+    }
+
+    function render() {
+        const container = document.getElementById('boardContainer');
+        const select = document.getElementById('categorySelect');
+        
+        container.innerHTML = '';
+        select.innerHTML = '';
+
+        localData.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat.id;
+            option.textContent = cat.title;
+            select.appendChild(option);
+
+            const doneCount = cat.tasks.filter(t => t.completed).length;
+
+            const card = document.createElement('div');
+            card.className = `category-card ${cat.collapsed ? 'collapsed' : ''}`;
+            
+            card.innerHTML = `
+                <div class="category-header" onclick="toggleSection('${cat.id}')">
+                    <div class="category-title">
+                        <i class="fa-solid fa-chevron-down chevron"></i>
+                        <span>${cat.title}</span>
+                    </div>
+                    <span class="badge">${doneCount} / ${cat.tasks.length} Done</span>
+                </div>
+                <div class="task-list">
+                    ${cat.tasks.length === 0 ? '<div style="color:var(--text-muted); padding: 5px;">No tasks yet.</div>' : ''}
+                    ${cat.tasks.map(task => `
+                        <div class="task-item ${task.completed ? 'completed' : ''}" onclick="toggleTask('${cat.id}', ${task.id})">
+                            <div class="task-left">
+                                <div class="checkbox"></div>
+                                <span class="task-text">${task.text}</span>
+                                ${task.tag ? `<span class="status-pill status-pending">${task.tag}</span>` : ''}
+                            </div>
+                            <button class="delete-btn" onclick="deleteTask('${cat.id}', ${task.id}, event)">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            container.appendChild(card);
+        });
+
+        updateProgress();
+    }
+</script>
+
+</body>
+</html>
