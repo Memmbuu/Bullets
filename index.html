@@ -348,15 +348,15 @@
     <div id="boardContainer"></div>
 </div>
 
-<!-- Firebase Modular SDK -->
+<!-- Firebase Realtime Database SDK -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    // Your configured Firebase project credentials
     const firebaseConfig = {
         apiKey: "AIzaSyB1vTYDWlWxaSlJ0OCrpB3X_-Xl1VMu2C4",
         authDomain: "bullets-dashboard.firebaseapp.com",
+        databaseURL: "https://bullets-dashboard-default-rtdb.firebaseio.com",
         projectId: "bullets-dashboard",
         storageBucket: "bullets-dashboard.firebasestorage.app",
         messagingSenderId: "126968137953",
@@ -365,8 +365,8 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const docRef = doc(db, "bullets_game", "roadmap");
+    const db = getDatabase(app);
+    const dbRef = ref(db, 'bullets_roadmap');
 
     const initialData = [
         {
@@ -413,11 +413,16 @@
 
     let localData = [];
 
-    // Realtime Sync Listener
-    onSnapshot(docRef, (docSnap) => {
+    // Realtime Listener for Realtime Database
+    onValue(dbRef, (snapshot) => {
         const syncStatus = document.getElementById('syncStatus');
-        if (docSnap.exists()) {
-            localData = docSnap.data().categories || [];
+        const data = snapshot.val();
+        if (data) {
+            // Clean up any empty task arrays if Firebase strips them
+            localData = data.map(cat => ({
+                ...cat,
+                tasks: cat.tasks || []
+            }));
         } else {
             saveToCloud(initialData);
             localData = initialData;
@@ -425,13 +430,13 @@
         syncStatus.innerHTML = '<i class="fa-solid fa-cloud-check"></i> Live Synced';
         render();
     }, (error) => {
-        console.error("Firestore error:", error);
+        console.error("Database error:", error);
         document.getElementById('syncStatus').innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Sync Error';
     });
 
     async function saveToCloud(dataToSave) {
         try {
-            await setDoc(docRef, { categories: dataToSave });
+            await set(dbRef, dataToSave);
         } catch (e) {
             console.error("Error saving to database: ", e);
         }
@@ -474,6 +479,7 @@
 
         const cat = localData.find(c => c.id === select.value);
         if (cat) {
+            if (!cat.tasks) cat.tasks = [];
             cat.tasks.push({
                 id: Date.now(),
                 text: text,
@@ -502,7 +508,7 @@
         let completed = 0;
 
         localData.forEach(cat => {
-            cat.tasks.forEach(task => {
+            (cat.tasks || []).forEach(task => {
                 total++;
                 if (task.completed) completed++;
             });
@@ -526,7 +532,8 @@
             option.textContent = cat.title;
             select.appendChild(option);
 
-            const doneCount = cat.tasks.filter(t => t.completed).length;
+            const tasks = cat.tasks || [];
+            const doneCount = tasks.filter(t => t.completed).length;
 
             const card = document.createElement('div');
             card.className = `category-card ${cat.collapsed ? 'collapsed' : ''}`;
@@ -537,11 +544,11 @@
                         <i class="fa-solid fa-chevron-down chevron"></i>
                         <span>${cat.title}</span>
                     </div>
-                    <span class="badge">${doneCount} / ${cat.tasks.length} Done</span>
+                    <span class="badge">${doneCount} / ${tasks.length} Done</span>
                 </div>
                 <div class="task-list">
-                    ${cat.tasks.length === 0 ? '<div style="color:var(--text-muted); padding: 5px;">No tasks yet.</div>' : ''}
-                    ${cat.tasks.map(task => `
+                    ${tasks.length === 0 ? '<div style="color:var(--text-muted); padding: 5px;">No tasks yet.</div>' : ''}
+                    ${tasks.map(task => `
                         <div class="task-item ${task.completed ? 'completed' : ''}" onclick="toggleTask('${cat.id}', ${task.id})">
                             <div class="task-left">
                                 <div class="checkbox"></div>
